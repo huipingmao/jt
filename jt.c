@@ -391,6 +391,7 @@ void print_all_data (Header *header, int max)
 	printf("total time: %.2f hours\n", (float)header->total_time / 3600);
 	printf("unique tag number: %d\n", header->unique_tags_number);
 	printf("record number: %d\n", header->record_number);
+	printf("number of days: %d\n", header->date_number);
 	printf("current streak: %d\n", header->c_streak);
 	printf("highest streak: %d\n", header->h_streak);
 	printf("\n");
@@ -399,7 +400,8 @@ void print_all_data (Header *header, int max)
 void mkbar (char *bar, char* color, int time, int highest_time)
 {
 	time = highest_time - (highest_time - time);
-	time = time / (highest_time / 14);
+	if (highest_time) time = time / (highest_time / 14); // testing for stupid edge case when only days with zero time are provided
+	else strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
 
 	if (time < 14 / 4) 			strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
 	else if (time <= 14 / 3) 	strncpy(color, "\x1B[38;2;255;153;204m", 30);
@@ -423,6 +425,8 @@ void print_graph (Header *header, int max)
 	int highest_time = 0;
 	char *reset = "\x1B[m";
 
+	printf("              SHOWING LAST %d DAY(S)\n", max);
+	printf("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 	for (int i = 0; i < max; i++) {
 		if (header->dates[i].total_time > highest_time)
 			highest_time = header->dates[i].total_time;
@@ -431,7 +435,7 @@ void print_graph (Header *header, int max)
 		char bar[15] = {"-"};
 		char color[30] = {0};
 		mkbar(bar, color, header->dates[i].total_time, highest_time);
-		printf("#%d\t|%d-%02d-%02d|%s%s%s|%05.2fh\n",
+		printf("#%d\t|%d-%02d-%02d|%s%s%s|%05.2fh (%d mins)\n",
 			i + 1,
 			header->dates[i].tmdate.tm_year + 1900,
 			header->dates[i].tmdate.tm_mon + 1,
@@ -439,10 +443,18 @@ void print_graph (Header *header, int max)
 			color,
 			bar,
 			reset,
-			(float)header->dates[i].total_time/3600
+			(float)header->dates[i].total_time/3600,
+			header->dates[i].total_time/60
 		);
 	}
-	if (header->date_number - max > 0) printf("... and %d more\n\n", header->date_number - max);
+	if (header->date_number - max > 0) printf("... and %d more\n", header->date_number - max);
+	printf("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+	printf("--> current streak: %d\n", header->c_streak);
+	printf("--> highest streak: %d\n", header->h_streak);
+	printf("--> total count of records: %d\n", header->record_number);
+	printf("--> days spent learning: %d\n", header->date_number);
+	printf("--> total time spent: %.02fh (%d mins)\n", (float)header->total_time / 3600, header->total_time / 60);
+	// add week and monthly avg and total TODO
 }
 
 void database_input_from_user ();
@@ -471,7 +483,7 @@ int32_t main (int32_t argc, char *argv[])
 	database_read(&header, f);
 	streak_calc(&header);
 
-	int arg = 0;
+	int arg = 10;
 	if (argc > 2) { arg = atol(argv[2]); }
 	if (arg < 0) { kys("arg less than 0"); }
 
@@ -482,7 +494,7 @@ int32_t main (int32_t argc, char *argv[])
 		else if (!strcmp(argv[1], "a")) { print_all_data(&header, arg); }
 		else if (!strcmp(argv[1], "h")) { puts(help); }
 		else { puts("option not found."); }
-	} else { print_graph(&header, 30); }
+	} else { print_graph(&header, 10); }
 
 	return 0;
 }
