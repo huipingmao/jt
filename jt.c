@@ -398,7 +398,8 @@ void print_all_data (Header *header, int max)
 }
 
 // #define BAR_LEN 14
-#define BAR_LEN 24
+// #define BAR_LEN 24
+#define BAR_LEN 32
 void mkbar (char *bar, char* color, int time, int highest_time)
 {
 
@@ -428,9 +429,9 @@ void print_graph (Header *header, int max)
 	int highest_time = 0;
 	char *reset = "\x1B[m";
 
-	printf("ああああああああああああああああああああああああああああああああ\n");
+	// printf("ああああああああああああああああああああああああああああああああ\n");
 	printf("                     SHOWING LAST %d DAY(S)\n", max);
-	printf("ああああああああああああああああああああああああああああああああ\n");
+	// printf("ああああああああああああああああああああああああああああああああ\n");
 	for (int i = 0; i < max; i++) {
 		if (header->dates[i].total_time > highest_time)
 			highest_time = header->dates[i].total_time;
@@ -453,14 +454,14 @@ void print_graph (Header *header, int max)
 		);
 	}
 	if (header->date_number - max > 0) printf("... and %d more\n", header->date_number - max);
-	printf("ああああああああああああああああああああああああああああああああ\n");
-	printf(" => Current streak: %d\n", header->c_streak);
-	printf("%s=>  Highest streak: %d%s\n", "\x1B[48;2;252;67;67m", header->h_streak, reset);
-	printf(" => Total number of records: %d\n", header->record_number);
-	printf("%s=>  Days spent learning: %d%s\n", "\x1B[48;2;252;67;67m", header->date_number, reset);
-	printf(" => Total time spent: %.02fh (%d mins)\n", (float)header->total_time / 3600, header->total_time / 60);
+	// printf("ああああああああああああああああああああああああああああああああ\n");
+	printf("%s Current streak: %d%s\n", "\x1b[48;2;100;100;100m", header->c_streak, reset);
+	printf("%s Highest streak: %d%s\n", "\x1B[48;2;67;67;67m", header->h_streak, reset);
+	printf("%s Total number of records: %d%s\n", "\x1b[48;2;100;100;100m", header->record_number, reset);
+	printf("%s Days spent learning: %d%s\n", "\x1B[48;2;67;67;67m", header->date_number, reset);
+	printf("%s Total time spent: %.02fh (%d mins)%s\n", "\x1b[48;2;100;100;100m", (float)header->total_time / 3600, header->total_time / 60, reset);
 	// add week and monthly avg and total TODO
-	printf("ああああああああああああああああああああああああああああああああ\n");
+	// printf("ああああああああああああああああああああああああああああああああ\n");
 }
 
 int32_t date_check_if_exists (Header *header, struct tm *date)
@@ -477,23 +478,12 @@ int32_t date_check_if_exists (Header *header, struct tm *date)
 
 void heatmap_cell_color (char* color, int time, int highest_time)
 {
-	// time = highest_time - (highest_time - time);
-	// if (highest_time) time = time / (highest_time / BAR_LEN); // testing for stupid edge case when only days with zero time are provided
-	// else strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
-
 	if (time < highest_time / 4) 			strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
 	else if (time <= highest_time / 3) 	strncpy(color, "\x1B[38;2;255;153;204m", 30);
 	else if (time <= highest_time / 2) 	strncpy(color, "\x1B[38;2;255;102;178m", 30);
 	else if (time <= highest_time * 0.6) 	strncpy(color, "\x1B[38;2;255;51;153m", 30);
 	else if (time <= highest_time * 0.8) 	strncpy(color, "\x1B[38;2;255;0;127m", 30);
 	else 							strncpy(color, "\x1B[38;2;204;0;102m", 30); // dark pink
-
-	// for (int i = 0; i < time; i++) {
-	// 	bar[i] = '@';
-	// }
-	// for (int i = time; i < BAR_LEN; i++) {
-	// 	bar[i] = '-';
-	// }
 }
 
 void print_heatmap (Header *header)
@@ -524,22 +514,23 @@ void print_heatmap (Header *header)
 		year_ends += year_starts + 365;
 	}
 
-	printf("ああああああああああああああああああああああああああああああああ\n");
-	printf("                      SHOWING LAST YEAR\n");
-	printf("ああああああああああああああああああああああああああああああああ\n");
+	// printf("ああああああああああああああああああああああああああああああああ\n");
+	printf("                     SHOWING LAST YEAR\n");
+	// printf("ああああああああああああああああああああああああああああああああ\n");
 	for (int i = 0; i < 7; i++) {
 		for (int j = 0; j < 53; j++) {
 
 			char color[30] = {0};
 			char cell = ' ';
-			int day_index = (i+j)+(j*6);
+			int day_index = (i + j) + (j * 6);
 
 			struct tm cur_day = (struct tm) {
 				.tm_year = today->tm_year,
-				.tm_yday = day_index - 1,
+				.tm_yday = day_index - year_starts + 1,
 			};
+
 			if (int x = date_check_if_exists(header, &cur_day)) {
-				heatmap_cell_color(color, header->dates[x].total_time, highest_time);
+				heatmap_cell_color(color, header->dates[x - 1].total_time, highest_time);
 				cell = '@';
 			} else {
 				cell = '%';
@@ -562,6 +553,8 @@ void print_heatmap (Header *header)
 			else if (day_index + 2 > year_ends) printf(" ");
 			else printf("%s%c%s", color, cell, reset);
 
+			// else printf("[%03d]", day_index);
+
 			// if (day_index + 1 < year_starts) printf("[   ]");
 			// else if (day_index + 2 > year_ends) printf("[   ]");
 			// else printf("[%03d]", day_index - year_starts + 2);
@@ -570,13 +563,13 @@ void print_heatmap (Header *header)
 		}
 		printf("\n");
 	}
-	printf("ああああああああああああああああああああああああああああああああ\n");
-	printf(" => Current streak: %d\n", header->c_streak);
-	printf("%s=>  Highest streak: %d%s\n", "\x1B[48;2;252;67;67m", header->h_streak, reset);
-	printf(" => Total number of records: %d\n", header->record_number);
-	printf("%s=>  Days spent learning: %d%s\n", "\x1B[48;2;252;67;67m", header->date_number, reset);
-	printf(" => Total time spent: %.02fh (%d mins)\n", (float)header->total_time / 3600, header->total_time / 60);
-	printf("ああああああああああああああああああああああああああああああああ\n");
+	// printf("ああああああああああああああああああああああああああああああああ\n");
+	printf("%s Current streak: %d%s\n", "\x1b[48;2;100;100;100m", header->c_streak, reset);
+	printf("%s Highest streak: %d%s\n", "\x1B[48;2;67;67;67m", header->h_streak, reset);
+	printf("%s Total number of records: %d%s\n", "\x1b[48;2;100;100;100m", header->record_number, reset);
+	printf("%s Days spent learning: %d%s\n", "\x1B[48;2;67;67;67m", header->date_number, reset);
+	printf("%s Total time spent: %.02fh (%d mins)%s\n", "\x1b[48;2;100;100;100m", (float)header->total_time / 3600, header->total_time / 60, reset);
+	// printf("ああああああああああああああああああああああああああああああああ\n");
 }
 
 void database_input_from_user ();
