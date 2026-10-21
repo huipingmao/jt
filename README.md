@@ -16,7 +16,7 @@ Lines beginning with `#` (comments) and new lines will be ignored.
 
 Path to database and text editor of choice is read from JT_PATH and JT_EDITOR env. variables respectively, and have to be set manually by the user.
 
-`$ jt h` for help message.
+`$ jt H` for help message.
 
 to-do:
 - make tags work better

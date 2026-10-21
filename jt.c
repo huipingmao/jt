@@ -35,27 +35,27 @@ typedef struct {
 } Query;
 
 typedef struct {
-	int32_t h_streak;
-	int32_t c_streak;
+	int32_t h_streak; int32_t c_streak;
 	int32_t total_time;
-	int32_t record_number;
-	int32_t record_cap;
-	int32_t unique_tags_number;
-	int32_t unique_tags_cap;
-	int32_t date_number;
-	int32_t date_cap;
-	Tag *unique_tags;
-	Record *records;
-	Date *dates;
+	int32_t record_number; int32_t record_cap;
+	int32_t unique_tags_number; int32_t unique_tags_cap;
+	int32_t date_number; int32_t date_cap;
+	Tag *unique_tags; Record *records; Date *dates;
 } Header;
 
-char *help = "\
-Options:\n\
-  e\t\topen database in editor.\n\
-  a <arg>\tdump all data; arg is number of days to show and is optional. 0 prints everything.\n\
-  g <arg>\tprint graph; arg is number of days to show and is optional. 0 prints everything.\n\
-  q\t\tlook up by tag name.\
-";
+char *help = ""
+"Options:\n"
+"  e\t\topen database in editor.\n\n"
+
+"  a <arg>\tdump all data. arg is number of records to show and is optional. arg=0 prints everything.\n\n"
+
+"  g <arg>\tprint graph. arg is number of days to show and is optional. arg=0 prints everything.\n"
+"  h\t\tprint heatmap.\n\n"
+
+"  q\t\tlook up by tag name. (doesn't work yet)\n\n"
+
+"  H\t\tprint this help message.\n"
+"";
 
 void kys (char *message) {
 	fprintf(stderr, "The program FUCKING died. Here's the possible cause: %s\n", message);
@@ -397,23 +397,26 @@ void print_all_data (Header *header, int max)
 	printf("\n");
 }
 
+// #define BAR_LEN 14
+#define BAR_LEN 24
 void mkbar (char *bar, char* color, int time, int highest_time)
 {
+
 	time = highest_time - (highest_time - time);
-	if (highest_time) time = time / (highest_time / 14); // testing for stupid edge case when only days with zero time are provided
+	if (highest_time) time = time / (highest_time / BAR_LEN); // testing for stupid edge case when only days with zero time are provided
 	else strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
 
-	if (time < 14 / 4) 			strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
-	else if (time <= 14 / 3) 	strncpy(color, "\x1B[38;2;255;153;204m", 30);
-	else if (time <= 14 / 2) 	strncpy(color, "\x1B[38;2;255;102;178m", 30);
-	else if (time <= 14 * 0.6) 	strncpy(color, "\x1B[38;2;255;51;153m", 30);
-	else if (time <= 14 * 0.8) 	strncpy(color, "\x1B[38;2;255;0;127m", 30);
-	else 					strncpy(color, "\x1B[38;2;204;0;102m", 30); // dark pink
+	if (time < BAR_LEN / 4) 			strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
+	else if (time <= BAR_LEN / 3) 	strncpy(color, "\x1B[38;2;255;153;204m", 30);
+	else if (time <= BAR_LEN / 2) 	strncpy(color, "\x1B[38;2;255;102;178m", 30);
+	else if (time <= BAR_LEN * 0.6) 	strncpy(color, "\x1B[38;2;255;51;153m", 30);
+	else if (time <= BAR_LEN * 0.8) 	strncpy(color, "\x1B[38;2;255;0;127m", 30);
+	else 						strncpy(color, "\x1B[38;2;204;0;102m", 30); // dark pink
 
 	for (int i = 0; i < time; i++) {
 		bar[i] = '@';
 	}
-	for (int i = time; i < 14; i++) {
+	for (int i = time; i < BAR_LEN; i++) {
 		bar[i] = '-';
 	}
 }
@@ -425,14 +428,16 @@ void print_graph (Header *header, int max)
 	int highest_time = 0;
 	char *reset = "\x1B[m";
 
-	printf("              SHOWING LAST %d DAY(S)\n", max);
-	printf("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+	printf("ああああああああああああああああああああああああああああああああ\n");
+	printf("                     SHOWING LAST %d DAY(S)\n", max);
+	printf("ああああああああああああああああああああああああああああああああ\n");
 	for (int i = 0; i < max; i++) {
 		if (header->dates[i].total_time > highest_time)
 			highest_time = header->dates[i].total_time;
 	}
 	for (int i = 0; i < max; i++) {
-		char bar[15] = {"-"};
+		// char bar[15] = {"-"};
+		char bar[BAR_LEN + 1] = {"-"};
 		char color[30] = {0};
 		mkbar(bar, color, header->dates[i].total_time, highest_time);
 		printf("#%d\t|%d-%02d-%02d|%s%s%s|%05.2fh (%d mins)\n",
@@ -448,13 +453,130 @@ void print_graph (Header *header, int max)
 		);
 	}
 	if (header->date_number - max > 0) printf("... and %d more\n", header->date_number - max);
-	printf("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
-	printf("--> current streak: %d\n", header->c_streak);
-	printf("--> highest streak: %d\n", header->h_streak);
-	printf("--> total count of records: %d\n", header->record_number);
-	printf("--> days spent learning: %d\n", header->date_number);
-	printf("--> total time spent: %.02fh (%d mins)\n", (float)header->total_time / 3600, header->total_time / 60);
+	printf("ああああああああああああああああああああああああああああああああ\n");
+	printf(" => Current streak: %d\n", header->c_streak);
+	printf("%s=>  Highest streak: %d%s\n", "\x1B[48;2;252;67;67m", header->h_streak, reset);
+	printf(" => Total number of records: %d\n", header->record_number);
+	printf("%s=>  Days spent learning: %d%s\n", "\x1B[48;2;252;67;67m", header->date_number, reset);
+	printf(" => Total time spent: %.02fh (%d mins)\n", (float)header->total_time / 3600, header->total_time / 60);
 	// add week and monthly avg and total TODO
+	printf("ああああああああああああああああああああああああああああああああ\n");
+}
+
+int32_t date_check_if_exists (Header *header, struct tm *date)
+{
+	for (int i = 0; i < header->date_number; i++) {
+		if (
+			header->dates[i].tmdate.tm_year == date->tm_year
+			&&
+			header->dates[i].tmdate.tm_yday == date->tm_yday
+		) return i + 1;
+	}
+	return 0;
+}
+
+void heatmap_cell_color (char* color, int time, int highest_time)
+{
+	// time = highest_time - (highest_time - time);
+	// if (highest_time) time = time / (highest_time / BAR_LEN); // testing for stupid edge case when only days with zero time are provided
+	// else strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
+
+	if (time < highest_time / 4) 			strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
+	else if (time <= highest_time / 3) 	strncpy(color, "\x1B[38;2;255;153;204m", 30);
+	else if (time <= highest_time / 2) 	strncpy(color, "\x1B[38;2;255;102;178m", 30);
+	else if (time <= highest_time * 0.6) 	strncpy(color, "\x1B[38;2;255;51;153m", 30);
+	else if (time <= highest_time * 0.8) 	strncpy(color, "\x1B[38;2;255;0;127m", 30);
+	else 							strncpy(color, "\x1B[38;2;204;0;102m", 30); // dark pink
+
+	// for (int i = 0; i < time; i++) {
+	// 	bar[i] = '@';
+	// }
+	// for (int i = time; i < BAR_LEN; i++) {
+	// 	bar[i] = '-';
+	// }
+}
+
+void print_heatmap (Header *header)
+{
+	// if (max > header->date_number || max == 0) max = header->date_number;
+
+	int highest_time = 0;
+	char *reset = "\x1B[m";
+
+	for (int i = 0; i < header->date_number; i++) {
+		if (header->dates[i].total_time > highest_time)
+			highest_time = header->dates[i].total_time;
+	}
+
+	time_t tmp = time(NULL);
+	struct tm *today = localtime(&tmp); // get current year
+
+	int year_starts = 0;
+	int year_ends = 0;
+	{
+		int y = today->tm_year + 1900;
+		int m = 1;
+		int d = 1;
+		if (is_leap_year(y)) year_ends++;
+		year_starts = (d += m < 3 ? y-- : y - 2, 23*m/9 + d + 4 + y/4- y/100 + y/400)%7; // found this on stackoverflow 
+		// actually fucking works XDDDDDD
+
+		year_ends += year_starts + 365;
+	}
+
+	printf("ああああああああああああああああああああああああああああああああ\n");
+	printf("                      SHOWING LAST YEAR\n");
+	printf("ああああああああああああああああああああああああああああああああ\n");
+	for (int i = 0; i < 7; i++) {
+		for (int j = 0; j < 53; j++) {
+
+			char color[30] = {0};
+			char cell = ' ';
+			int day_index = (i+j)+(j*6);
+
+			struct tm cur_day = (struct tm) {
+				.tm_year = today->tm_year,
+				.tm_yday = day_index - 1,
+			};
+			if (int x = date_check_if_exists(header, &cur_day)) {
+				heatmap_cell_color(color, header->dates[x].total_time, highest_time);
+				cell = '@';
+			} else {
+				cell = '%';
+				// color = "";
+				strcpy(color, "\x1B[38;2;60;60;60m");
+			}
+
+			if (j == 0) 
+				switch (i) {
+					case 0: printf("Mo | "); break;
+					case 1: printf("Tu | "); break;
+					case 2: printf("Wd | "); break;
+					case 3: printf("Th | "); break;
+					case 4: printf("Fr | "); break;
+					case 5: printf("Sa | "); break;
+					case 6: printf("Su | "); break;
+				}
+
+			if (day_index + 1 < year_starts) printf(" ");
+			else if (day_index + 2 > year_ends) printf(" ");
+			else printf("%s%c%s", color, cell, reset);
+
+			// if (day_index + 1 < year_starts) printf("[   ]");
+			// else if (day_index + 2 > year_ends) printf("[   ]");
+			// else printf("[%03d]", day_index - year_starts + 2);
+
+			// printf("[%03d]", day_index);
+		}
+		printf("\n");
+	}
+	printf("ああああああああああああああああああああああああああああああああ\n");
+	printf(" => Current streak: %d\n", header->c_streak);
+	printf("%s=>  Highest streak: %d%s\n", "\x1B[48;2;252;67;67m", header->h_streak, reset);
+	printf(" => Total number of records: %d\n", header->record_number);
+	printf("%s=>  Days spent learning: %d%s\n", "\x1B[48;2;252;67;67m", header->date_number, reset);
+	printf(" => Total time spent: %.02fh (%d mins)\n", (float)header->total_time / 3600, header->total_time / 60);
+	printf("ああああああああああああああああああああああああああああああああ\n");
 }
 
 void database_input_from_user ();
@@ -462,13 +584,9 @@ void database_input_from_user ();
 int32_t main (int32_t argc, char *argv[])
 {
 	Header header = (Header) {
-		.h_streak = 0,
-		.c_streak = 0,
-		.record_number = 0,
-		.record_cap = 0,
-		.unique_tags_number = 0,
-		.unique_tags_cap = 0,
-		.unique_tags = NULL,
+		.h_streak = 0, .c_streak = 0,
+		.record_number = 0, .record_cap = 0,
+		.unique_tags_number = 0, .unique_tags_cap = 0, .unique_tags = NULL,
 		.records = NULL,
 	};
 
@@ -489,10 +607,11 @@ int32_t main (int32_t argc, char *argv[])
 
 	if (argc > 1) {
 		if (!strcmp(argv[1], "e")) { system(editor_command); }
-		// else if (!strcmp(argv[1], "q")) { puts("query"); }
 		else if (!strcmp(argv[1], "g")) { print_graph(&header, arg); }
 		else if (!strcmp(argv[1], "a")) { print_all_data(&header, arg); }
-		else if (!strcmp(argv[1], "h")) { puts(help); }
+		else if (!strcmp(argv[1], "q")) { puts("query | TBD"); } // TBD
+		else if (!strcmp(argv[1], "h")) { print_heatmap(&header); }
+		else if (!strcmp(argv[1], "H")) { puts(help); }
 		else { puts("option not found."); }
 	} else { print_graph(&header, 10); }
 
