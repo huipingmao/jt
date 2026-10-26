@@ -7,7 +7,7 @@ Eg. entries:
 2026-10-10 03:20 anime:bocchi the rock
 2026-10-09 00:45 youtube:podcast
 2026-09-25 02:30 reading:light novel
-#  ^date   ^time      ^tag
+#  ^date   ^time   ^tag   ^subtag
 ```
 
 Dates are read from top to bottom, meaning the most recent entry should be at the top.
@@ -19,9 +19,12 @@ Path to database and text editor of choice is read from JT_PATH and JT_EDITOR en
 `$ jt H` for help message.
 
 to-do:
-- make tags work better
-- tui
-- input without text editor (idk maybe)
+- show previous years on the heatmap
+- daily/weekly/monthly/yearly avg
+- subtags
+- filter by tags and subtags
+- no color option
+- tui (?)
 
 ![pic unrelated](./image.jpg)
 pic unrelated (254KB wasted)

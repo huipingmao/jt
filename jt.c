@@ -244,7 +244,10 @@ void database_read (Header *header, FILE *f)
 		if (record_append(header, &tmp))
 			kys("memory alloc killed itself (record alloc). rest in piss.");
 
-		if (int x = tag_check_if_exists(header, tag)) {
+		// int x = 0; // WTF HAPPENED
+		int x = tag_check_if_exists(header, tag);
+		// if (x = tag_check_if_exists(header, tag)) {
+		if (x) {
 			header->unique_tags[x - 1].tag_number++;
 			header->records[ header->record_number - 1 ].parent_tag = &header->unique_tags[x - 1];
 		} else {
@@ -410,9 +413,10 @@ void mkbar (char *bar, char* color, int time, int highest_time)
 	if (time < BAR_LEN / 4) 			strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
 	else if (time <= BAR_LEN / 3) 	strncpy(color, "\x1B[38;2;255;153;204m", 30);
 	else if (time <= BAR_LEN / 2) 	strncpy(color, "\x1B[38;2;255;102;178m", 30);
-	else if (time <= BAR_LEN * 0.6) 	strncpy(color, "\x1B[38;2;255;51;153m", 30);
-	else if (time <= BAR_LEN * 0.8) 	strncpy(color, "\x1B[38;2;255;0;127m", 30);
-	else 						strncpy(color, "\x1B[38;2;204;0;102m", 30); // dark pink
+	else if (time <= BAR_LEN * 0.7) 	strncpy(color, "\x1B[38;2;255;51;153m", 30);
+	else if (time <= BAR_LEN * 0.9) 	strncpy(color, "\x1B[38;2;255;0;127m", 30);
+	// else 						strncpy(color, "\x1B[38;2;204;0;102m", 30); // dark pink
+	else 						strncpy(color, "\x1B[38;2;190;0;90m", 30); // dark pink
 
 	for (int i = 0; i < time; i++) {
 		bar[i] = '@';
@@ -430,7 +434,7 @@ void print_graph (Header *header, int max)
 	char *reset = "\x1B[m";
 
 	// printf("ああああああああああああああああああああああああああああああああ\n");
-	printf("                     SHOWING LAST %d DAY(S)\n", max);
+	printf("                        SHOWING LAST %d DAY(S)\n", max);
 	// printf("ああああああああああああああああああああああああああああああああ\n");
 	for (int i = 0; i < max; i++) {
 		if (header->dates[i].total_time > highest_time)
@@ -481,9 +485,10 @@ void heatmap_cell_color (char* color, int time, int highest_time)
 	if (time < highest_time / 4) 			strncpy(color, "\x1B[38;2;255;204;229m", 30); // light pink
 	else if (time <= highest_time / 3) 	strncpy(color, "\x1B[38;2;255;153;204m", 30);
 	else if (time <= highest_time / 2) 	strncpy(color, "\x1B[38;2;255;102;178m", 30);
-	else if (time <= highest_time * 0.6) 	strncpy(color, "\x1B[38;2;255;51;153m", 30);
-	else if (time <= highest_time * 0.8) 	strncpy(color, "\x1B[38;2;255;0;127m", 30);
-	else 							strncpy(color, "\x1B[38;2;204;0;102m", 30); // dark pink
+	else if (time <= highest_time * 0.7) 	strncpy(color, "\x1B[38;2;255;51;153m", 30);
+	else if (time <= highest_time * 0.9) 	strncpy(color, "\x1B[38;2;255;0;127m", 30);
+	// else 							strncpy(color, "\x1B[38;2;204;0;102m", 30); // dark pink
+	else								strncpy(color, "\x1B[38;2;190;0;90m", 30); // dark pink
 }
 
 void print_heatmap (Header *header)
@@ -515,7 +520,9 @@ void print_heatmap (Header *header)
 	}
 
 	// printf("ああああああああああああああああああああああああああああああああ\n");
-	printf("                     SHOWING LAST YEAR\n");
+	// printf("                     SHOWING LAST YEAR\n");
+	// printf("                           %d\n", today->tm_year + 1900);
+	printf("========================== %d ==========================\n", today->tm_year + 1900);
 	// printf("ああああああああああああああああああああああああああああああああ\n");
 	for (int i = 0; i < 7; i++) {
 		for (int j = 0; j < 53; j++) {
@@ -529,7 +536,10 @@ void print_heatmap (Header *header)
 				.tm_yday = day_index - year_starts + 1,
 			};
 
-			if (int x = date_check_if_exists(header, &cur_day)) {
+			// int x = 0; // WTF HAPPENED 
+			int x = date_check_if_exists(header, &cur_day);
+			// if (int x = date_check_if_exists(header, &cur_day)) { // this compiled just fine under c99 flag before btw
+			if (x) {
 				heatmap_cell_color(color, header->dates[x - 1].total_time, highest_time);
 				cell = '@';
 			} else {
